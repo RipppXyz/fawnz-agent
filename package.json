@@ -1,6 +1,6 @@
 {
   "name": "@ripppxyz/zcode",
-  "version": "2.0.4",
+  "version": "2.0.5",
   "description": "Lightweight AI agent for your terminal — pick any model through 9router, no lock-in to one provider.",
   "type": "module",
   "bin": {
