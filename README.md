@@ -53,8 +53,8 @@ zcode@latest
 
 ```bash
 pkg update && pkg install nodejs git -y
-git clone https://github.com/RipppXyz/zcodex-agent.git
-cd zcodex-agent
+git clone https://github.com/RipppXyz/zcode-agent.git
+cd zcode-agent
 bash install.sh
 ```
 
@@ -63,8 +63,8 @@ bash install.sh
 Butuh Node.js 18 ke atas.
 
 ```bash
-git clone https://github.com/RipppXyz/zcodex-agent.git
-cd zcodex-agent
+git clone https://github.com/RipppXyz/zcode-agent.git
+cd zcode-agent
 npm install
 npm link
 zcode
@@ -124,7 +124,7 @@ zcode --help       # bantuan singkat
 ## Struktur proyek
 
 ```
-zcodex-agent/
+zcode-agent/
 ├── bin/
 │   └── zcode.js         # entry point
 ├── src/
@@ -152,7 +152,7 @@ npm install -g @ripppxyz/zcode@latest
 Kalau install dari git clone, **jangan** `git clone` ulang ke folder yang sama — bakal gagal dengan `destination path already exists` dan diam-diam tetap makai kode lama. Pakai `git pull`, atau jalankan `update.sh`:
 
 ```bash
-cd zcodex-agent
+cd zcode-agent
 bash update.sh
 ```
 
@@ -161,9 +161,9 @@ bash update.sh
 Clean install dari nol:
 
 ```bash
-rm -rf zcodex-agent
-git clone https://github.com/RipppXyz/zcodex-agent.git
-cd zcodex-agent
+rm -rf zcode-agent
+git clone https://github.com/RipppXyz/zcode-agent.git
+cd zcode-agent
 npm install
 npm link
 ```
@@ -172,7 +172,7 @@ npm link
 
 ```bash
 npm login
-cd zcodex-agent
+cd zcode-agent
 npm version patch   # atau minor/major — otomatis update package.json + git tag
 npm publish --access public
 ```
