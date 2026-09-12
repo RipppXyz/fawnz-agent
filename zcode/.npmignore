@@ -1,0 +1,11 @@
+*.zip
+*.tar
+*.tgz
+node_modules/
+npm-debug.log*
+.DS_Store
+*.log
+.git/
+.gitignore
+.vscode/
+.idea/
