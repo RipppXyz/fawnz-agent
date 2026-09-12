@@ -1,0 +1,46 @@
+{
+  "name": "@ripppxyz/zcode",
+  "version": "2.0.2",
+  "description": "Agen AI ringan yang jalan di terminal — bebas pilih model apapun lewat 9router, tanpa lock-in ke satu provider.",
+  "type": "module",
+  "bin": {
+    "zcode": "./bin/zcode.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "install.sh",
+    "update.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node bin/zcode.js",
+    "prepublishOnly": "chmod +x bin/zcode.js"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "cli",
+    "termux",
+    "9router",
+    "terminal",
+    "zcode",
+    "model-agnostic"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RipppXyz/zcodex-agent.git"
+  },
+  "homepage": "https://github.com/RipppXyz/zcodex-agent",
+  "bugs": {
+    "url": "https://github.com/RipppXyz/zcodex-agent/issues"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0"
+  }
+}
