@@ -27,6 +27,7 @@ ZCode tidak punya model bawaan. Semua request diteruskan ke instance [9router](h
 ## Kenapa ZCode
 
 - **Model-agnostic beneran** — ZCode gak nebak, gak ngunci, dan gak nyimpen daftar model apapun di kodenya. Semua ditarik live dari `/v1/models` router kamu.
+- **Langsung masuk chat** — gak ada form Base URL/API key/model yang wajib diisi sebelum bisa ngobrol. Jalankan `zcode`, langsung kepakai. Belum ada model? Ketik pesan aja, menu pilihnya kebuka otomatis di tempat.
 - **Ganti model tanpa turun mesin** — `/model` buka menu pilih, `/model <nama>` langsung pindah. Gak ada restart, gak ada reinstall.
 - **Satu binary, semua platform** — Linux, macOS, dan Termux (Android) tanpa modifikasi kode.
 - **Command palette ala Claude Code** — ketik `/` dan daftar perintah muncul, tersaring otomatis sambil kamu ngetik. Navigasi panah ↑↓, pilih dengan Tab/Enter.
@@ -71,13 +72,13 @@ zcode
 
 ## Pemakaian
 
-ZCode **tidak** menebak model apapun buat kamu. Begitu `zcode` dijalankan pertama kali dan belum ada konfigurasi tersimpan, dia akan:
+ZCode **tidak** menyuruh kamu isi form apapun sebelum bisa ngobrol. Jalankan `zcode`, dan kamu langsung masuk ke layar chat — sama saja baik ini run pertama kali atau yang ke-seratus.
 
-1. Nanya Base URL & API key instance 9router kamu (Enter kosong = pakai default `http://localhost:20128/v1`, tanpa API key).
-2. Konek ke router, tarik daftar model yang tersedia lewat `/v1/models`.
-3. Kasih menu buat kamu pilih model dari daftar itu (bisa diketik untuk cari).
+Model **tidak** ditebak atau dihardcode. Kalau belum ada model diset, banner bakal nunjukin `belum diset — ketik /model`, dan begitu kamu ketik pesan pertama, ZCode otomatis buka menu pilih model dari 9router di tempat — pesan kamu langsung lanjut terkirim setelah model dipilih. Gak ada layar terpisah, gak ada jeda.
 
-Hasil setup disimpan di `~/.zcode/config.json`, jadi cuma ditanya sekali. Mau ubah lagi belakangan, pakai `/config` di dalam chat, `/model` buat ganti model saja, atau jalankan `zcode --config` dari terminal.
+Base URL & API key router pakai default (`http://localhost:20128/v1`, tanpa API key) kalau kamu belum pernah atur. Mau ganti, pakai `/config` kapan saja di dalam chat, atau `zcode --config` dari terminal.
+
+Hasil konfigurasi (base url, api key, model) disimpan di `~/.zcode/config.json`.
 
 ### Setup non-interaktif (automation / CI / Docker)
 
