@@ -46,7 +46,7 @@ Belum punya instance 9router? Lihat [repo 9router](https://github.com/decocua/9r
 
 ```bash
 npm install -g @ripppxyz/zcode
-zcode
+zcode@latest
 ```
 
 ### Termux
