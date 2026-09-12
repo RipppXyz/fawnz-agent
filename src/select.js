@@ -11,7 +11,7 @@ const PAGE_SIZE = 10;
  *
  * Mengembalikan item yang dipilih, atau null kalau dibatalkan.
  */
-export function selectFromList(items, { message = "Pilih:", current = null } = {}) {
+export function selectFromList(items, { message = "Pick:", current = null, footerNote = null } = {}) {
   return new Promise((resolve) => {
     if (!items || items.length === 0) {
       resolve(null);
@@ -71,11 +71,12 @@ export function selectFromList(items, { message = "Pilih:", current = null } = {
 
       lines.push(
         filtered.length === 0
-          ? chalk.red("tidak ada model yang cocok")
+          ? chalk.red("no matching model")
           : chalk.gray(
-              `${index + 1}/${filtered.length} · ↑↓ pilih · ketik untuk cari · Enter pilih · Esc batal`
+              `${index + 1}/${filtered.length} · ↑↓ move · type to search · Enter pick · Esc cancel`
             )
       );
+      if (footerNote) lines.push(chalk.gray(`  ${footerNote}`));
 
       if (!firstRender) {
         process.stdout.write(`\x1B[${lines.length}A`);

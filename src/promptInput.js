@@ -26,6 +26,11 @@ export function promptInput({ promptLabel, history = [] }) {
     let filtered = [];
     let prevMenuLines = 0;
 
+    function stripAnsi(s) {
+      // eslint-disable-next-line no-control-regex
+      return s.replace(/\x1B\[[0-9;]*m/g, "");
+    }
+
     const wasRaw = Boolean(process.stdin.isRaw);
     readline.emitKeypressEvents(process.stdin);
     if (process.stdin.isTTY) process.stdin.setRawMode(true);
@@ -56,8 +61,20 @@ export function promptInput({ promptLabel, history = [] }) {
     }
 
     function render() {
+      // PENTING: dulu fungsi ini pakai "\x1B[s" (simpan posisi cursor) lalu
+      // "\x1B[u" (restore) buat balik ke baris input setelah nge-print menu
+      // di bawahnya. Save/restore itu nyimpen posisi ABSOLUT di layar — begitu
+      // nge-print menu bikin layar scroll (gampang kejadian di terminal
+      // pendek kayak Termux dengan keyboard kebuka), posisi yang disimpan
+      // jadi nunjuk ke baris yang salah. Efeknya: baris "you › ..." lama
+      // gak pernah ketimpa, malah numpuk terus tiap keystroke (persis bug
+      // yang kelihatan di video). Fix-nya: jangan pernah pakai posisi
+      // absolut. Gerakin cursor cuma pakai jarak RELATIF (naik N baris dari
+      // posisi sekarang) — ini tetap benar walau layar lagi scroll, karena
+      // baris yang lagi dilihat ikut geser bareng cursor-nya. Pola ini sudah
+      // dipakai dengan benar di select.js; di sini kita samain.
+      const promptPlainLen = stripAnsi(promptLabel).length + 1; // +1 = spasi setelah label
       process.stdout.write(`\r\x1B[K${promptLabel} ${line}`);
-      process.stdout.write("\x1B[s"); // simpan posisi cursor (akhir teks input)
 
       let menuLines = 0;
       if (menuOpen) {
@@ -68,21 +85,29 @@ export function promptInput({ promptLabel, history = [] }) {
         }
         if (filtered.length > MAX_MENU_ITEMS) {
           process.stdout.write(
-            "\n\r\x1B[K" + chalk.gray(`  … ${filtered.length - MAX_MENU_ITEMS} lagi, terus ngetik untuk nyaring`)
+            "\n\r\x1B[K" + chalk.gray(`  … ${filtered.length - MAX_MENU_ITEMS} more, keep typing to filter`)
           );
           menuLines++;
         }
       }
 
+      // Baris menu yang lebih dikit dari render sebelumnya harus tetap
+      // dibersihkan (sisa render lama), tapi tetap dihitung sebagai baris
+      // yang "digambar" render ini supaya perhitungan naik-ke-atas di bawah
+      // tetap akurat.
       const linesToClear = Math.max(0, prevMenuLines - menuLines);
       for (let i = 0; i < linesToClear; i++) {
         process.stdout.write("\n\r\x1B[K");
       }
       prevMenuLines = menuLines;
 
-      process.stdout.write("\x1B[u"); // balik ke akhir teks input
-      const back = line.length - cursor;
-      if (back > 0) process.stdout.write(`\x1B[${back}D`);
+      const rowsBelow = menuLines + linesToClear;
+      if (rowsBelow > 0) {
+        process.stdout.write(`\x1B[${rowsBelow}A`); // naik balik ke baris input, RELATIF
+      }
+      process.stdout.write("\r");
+      const col = promptPlainLen + cursor;
+      if (col > 0) process.stdout.write(`\x1B[${col}C`);
     }
 
     function finishLine(extraLinesBelow) {
@@ -111,7 +136,7 @@ export function promptInput({ promptLabel, history = [] }) {
       if (key.ctrl && key.name === "c") {
         cleanup();
         finishLine(prevMenuLines);
-        console.log(chalk.gray("Sampai jumpa.\n"));
+        console.log(chalk.gray("Bye.\n"));
         process.exit(0);
       }
 

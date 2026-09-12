@@ -14,7 +14,15 @@ const HISTORY_FILE = path.join(CONFIG_DIR, "history.json");
 // 9router saat pertama kali menjalankan zcode.
 const DEFAULTS = {
   baseUrl: process.env.ZCODE_BASE_URL || "http://localhost:20128/v1",
-  apiKey: process.env.ZCODE_API_KEY || "",
+  // Deteksi otomatis dari env var yang umum dipakai, biar first-run gak
+  // maksa user ngetik API key manual kalau sebenarnya sudah ada di env
+  // (mis. dari tool lain yang connect ke router yang sama).
+  apiKey:
+    process.env.ZCODE_API_KEY ||
+    process.env.NINEROUTER_API_KEY ||
+    process.env.ROUTER_API_KEY ||
+    process.env.OPENROUTER_API_KEY ||
+    "",
   model: process.env.ZCODE_MODEL || "",
 };
 

@@ -44,6 +44,28 @@ export async function listModels(baseUrl, apiKey) {
 }
 
 /**
+ * Router biasanya balikin banyak varian ":batch" / ":free" / dst per model
+ * dasar yang sama (contoh: "cl/openai/gpt-5" DAN "cl/openai/gpt-5:batch"
+ * bersebelahan). Itu bagus buat /models (transparansi penuh, teks polos),
+ * tapi bikin combo pilih model ("/model") jadi ratusan baris yang isinya
+ * kebanyakan duplikat nyaris identik. Fungsi ini KHUSUS buat combo: satu
+ * baris per model dasar (bagian sebelum ":"), ambil kemunculan pertama
+ * dari tiap base biar id yang dipilih tetap id yang beneran valid di
+ * router. Data aslinya (listModels) tidak diubah / tidak hilang.
+ */
+export function collapseModelVariants(models) {
+  const seenBase = new Set();
+  const result = [];
+  for (const m of models) {
+    const base = m.split(":")[0];
+    if (seenBase.has(base)) continue;
+    seenBase.add(base);
+    result.push(m);
+  }
+  return result;
+}
+
+/**
  * Streaming chat completion. Yields text chunks as they arrive.
  * Falls back to a single full-text yield if the router doesn't support SSE.
  */

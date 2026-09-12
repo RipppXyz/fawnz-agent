@@ -1,7 +1,7 @@
 import chalk from "chalk";
 import { getOrCreateConfig, saveConfig, DEFAULTS } from "./config.js";
 import { runSetup } from "./setup.js";
-import { streamChat, listModels } from "./api.js";
+import { streamChat, listModels, collapseModelVariants } from "./api.js";
 import { selectFromList } from "./select.js";
 import { promptInput } from "./promptInput.js";
 import { startSpinner, stopSpinner } from "./spinner.js";
@@ -18,7 +18,7 @@ import {
 } from "./ui.js";
 
 const SYSTEM_PROMPT =
-  "Kamu adalah ZCode, agen AI yang berjalan di terminal untuk membantu pekerjaan coding dan tugas sehari-hari pengguna. Jawab singkat, jelas, dan langsung ke intinya kecuali diminta detail lebih.";
+  "You are ZCode, an AI agent running in the terminal to help with coding and everyday tasks. Answer briefly, clearly, and to the point unless the user asks for more detail.";
 
 export async function main() {
   const args = process.argv.slice(2);
@@ -61,8 +61,8 @@ export async function main() {
   if (isFirstRun) {
     console.log(
       infoText(
-        "  Langsung ketik aja buat mulai ngobrol. Belum ada model diset — begitu kamu kirim pesan pertama,\n" +
-          "  ZCode otomatis buka menu pilih model dari 9router. Ganti kapan saja dengan " +
+        "  Just start typing to chat. No model is set yet — as soon as you send your first\n" +
+          "  message, ZCode will open the model picker from 9router. Change it anytime with " +
           chalk.cyan("/model") +
           ".\n"
       )
@@ -95,14 +95,14 @@ export async function main() {
     if (!config.model) {
       const picked = await pickModelInteractive(config);
       if (!picked) {
-        console.log(infoText("  Belum pilih model, pesan tadi belum dikirim. Coba lagi kapan siap.\n"));
+        console.log(infoText("  No model picked, that message wasn't sent. Try again whenever you're ready.\n"));
         continue;
       }
     }
 
     messages.push({ role: "user", content: input });
 
-    const spinner = startSpinner("berpikir");
+    const spinner = startSpinner("thinking");
     let fullReply = "";
     let wroteAnyChunk = false;
 
@@ -134,7 +134,7 @@ export async function main() {
     messages.push({ role: "assistant", content: fullReply });
   }
 
-  console.log(chalk.gray("\nSampai jumpa.\n"));
+  console.log(chalk.gray("\nBye.\n"));
 }
 
 async function handleCommand(input, { config, messages }) {
@@ -152,14 +152,14 @@ async function handleCommand(input, { config, messages }) {
 
     case "clear":
       messages.length = 1; // sisakan system prompt
-      console.log(successText("Riwayat percakapan dikosongkan.\n"));
+      console.log(successText("Conversation history cleared.\n"));
       return;
 
     case "model":
       if (arg) {
         config.model = arg;
         saveConfig(config);
-        console.log(successText(`Model diganti ke: ${arg}\n`));
+        console.log(successText(`Model switched to: ${arg}\n`));
         return { config };
       }
       await pickModelInteractive(config);
@@ -170,14 +170,14 @@ async function handleCommand(input, { config, messages }) {
         const models = await listModels(config.baseUrl, config.apiKey);
         console.log();
         if (models.length === 0) {
-          console.log(infoText("  (router tidak mengembalikan model apapun)"));
+          console.log(infoText("  (the router didn't return any models)"));
         }
         models.forEach((m) =>
           console.log(`  ${m === config.model ? chalk.green("● " + m) : "  " + m}`)
         );
         console.log();
       } catch (err) {
-        console.log(errorText(`Gagal ambil daftar model: ${err.message}\n`));
+        console.log(errorText(`Couldn't fetch the model list: ${err.message}\n`));
       }
       return;
 
@@ -188,39 +188,49 @@ async function handleCommand(input, { config, messages }) {
     }
 
     default:
-      console.log(errorText(`Perintah tidak dikenal: /${cmd}. Ketik / untuk lihat daftar perintah.\n`));
+      console.log(errorText(`Unknown command: /${cmd}. Type / to see the command list.\n`));
       return;
   }
 }
 
 async function pickModelInteractive(config) {
-  console.log(infoText("Mengambil daftar model dari 9router..."));
+  console.log(infoText("Fetching the model list from 9router..."));
   let models = [];
   try {
     models = await listModels(config.baseUrl, config.apiKey);
   } catch (err) {
-    console.log(errorText(`Gagal ambil daftar model: ${err.message}`));
-    console.log(infoText("  Cek Base URL / API key router-nya dengan /config.\n"));
+    console.log(errorText(`Couldn't fetch the model list: ${err.message}`));
+    console.log(infoText("  Check the router's Base URL / API key with /config.\n"));
     return null;
   }
 
   if (models.length === 0) {
-    console.log(errorText("Router tidak mengembalikan model apapun.\n"));
+    console.log(errorText("The router didn't return any models.\n"));
     return null;
   }
 
-  const picked = await selectFromList(models, {
-    message: "Cari & pilih model:",
+  // Combo cuma nunjukin satu baris per model dasar (varian ":batch" dkk
+  // disaring) supaya gampang dicari — lihat collapseModelVariants di
+  // api.js. Daftar mentah lengkapnya tetap bisa dilihat lewat /models.
+  const menuModels = collapseModelVariants(models);
+  const hiddenCount = models.length - menuModels.length;
+
+  const picked = await selectFromList(menuModels, {
+    message: "Search & pick a model:",
     current: config.model,
+    footerNote:
+      hiddenCount > 0
+        ? `${hiddenCount} variant${hiddenCount === 1 ? "" : "s"} (:batch, :free, …) hidden — see /models for the full list`
+        : null,
   });
 
   if (picked) {
     config.model = picked;
     saveConfig(config);
-    console.log(successText(`Model diganti ke: ${picked}\n`));
+    console.log(successText(`Model switched to: ${picked}\n`));
     return picked;
   }
 
-  console.log(infoText("Dibatalkan, model tidak diganti.\n"));
+  console.log(infoText("Cancelled, model unchanged.\n"));
   return null;
 }

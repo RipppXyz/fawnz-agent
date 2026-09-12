@@ -23,13 +23,13 @@ const ACCENT = "#F2A24C";
 // Satu sumber untuk semua perintah "/" — dipakai oleh /help DAN oleh
 // menu autocomplete di promptInput.js supaya keduanya selalu sinkron.
 export const COMMANDS = [
-  { name: "/help", desc: "tampilkan bantuan ini" },
-  { name: "/model", desc: "buka menu pilih model (panah ↑↓, ketik untuk cari)" },
-  { name: "/models", desc: "lihat daftar model dari router sebagai teks" },
-  { name: "/clear", desc: "kosongkan riwayat percakapan" },
-  { name: "/config", desc: "ulangi setup (base url / api key / model)" },
-  { name: "/exit", desc: "keluar dari ZCode" },
-  { name: "/quit", desc: "sama seperti /exit" },
+  { name: "/help", desc: "show this help" },
+  { name: "/model", desc: "open the model picker (↑↓ arrows, type to search)" },
+  { name: "/models", desc: "list every model from the router as plain text" },
+  { name: "/clear", desc: "clear the conversation history" },
+  { name: "/config", desc: "redo setup (base url / api key / model)" },
+  { name: "/exit", desc: "quit ZCode" },
+  { name: "/quit", desc: "same as /exit" },
 ];
 
 function termWidth() {
@@ -49,7 +49,7 @@ export function printBootAnimation({ durationMs = 420 } = {}) {
   return new Promise((resolve) => {
     let i = 0;
     process.stdout.write("\x1B[?25l");
-    const label = chalk.gray("menyalakan ") + chalk.hex(ACCENT).bold("ZCode") + chalk.gray("...");
+    const label = chalk.gray("booting ") + chalk.hex(ACCENT).bold("ZCode") + chalk.gray("...");
     const timer = setInterval(() => {
       process.stdout.write(`\r\x1B[K${chalk.hex(ACCENT)(BOOT_FRAMES[i])} ${label}`);
       i = (i + 1) % BOOT_FRAMES.length;
@@ -71,7 +71,7 @@ export function printBanner({ model, baseUrl }) {
 
   const title = chalk.bold.hex(ACCENT)("ZCode") + chalk.bold(" Agent") + chalk.gray("  v" + VERSION);
   const titlePlainLen = ("ZCode Agent  v" + VERSION).length;
-  const subtitle = "agen AI di terminal kamu, ditenagai 9router";
+  const subtitle = "the AI agent in your terminal, powered by 9router";
 
   console.log();
   console.log(top);
@@ -89,8 +89,8 @@ export function printBanner({ model, baseUrl }) {
   console.log(mid);
 
   const rows = [
-    ["model", model ? chalk.white(model) : chalk.yellow("belum diset — ketik /model")],
-    ["router", chalk.white(baseUrl || "belum diset")],
+    ["model", model ? chalk.white(model) : chalk.yellow("not set — type /model")],
+    ["router", chalk.white(baseUrl || "not set")],
     ["dir", chalk.white(shortenPath(process.cwd()))],
   ];
   for (const [label, coloredValue] of rows) {
@@ -101,7 +101,7 @@ export function printBanner({ model, baseUrl }) {
   }
 
   console.log(bottom);
-  console.log(chalk.gray("  ketik pesan lalu Enter · ") + chalk.cyan("/") + chalk.gray(" untuk daftar perintah"));
+  console.log(chalk.gray("  type a message and hit Enter · ") + chalk.cyan("/") + chalk.gray(" for the command list"));
   console.log();
 }
 
@@ -113,12 +113,12 @@ function shortenPath(p) {
 
 export function printHelp() {
   console.log();
-  console.log(chalk.bold("Perintah tersedia:"));
+  console.log(chalk.bold("Available commands:"));
   for (const { name, desc } of COMMANDS) {
     console.log(`  ${chalk.cyan(name.padEnd(16))} ${chalk.gray(desc)}`);
   }
   console.log();
-  console.log(chalk.gray("Tips: ketik \"/\" lalu terus ngetik untuk nyaring daftar perintah, panah ↑↓ untuk pilih, Tab/Enter untuk pakai."));
+  console.log(chalk.gray("Tip: type \"/\" and keep typing to filter the command list, ↑↓ to move, Tab/Enter to use."));
   console.log();
 }
 

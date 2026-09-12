@@ -1,7 +1,7 @@
 {
   "name": "@ripppxyz/zcode",
-  "version": "2.0.3",
-  "description": "Agen AI ringan yang jalan di terminal — bebas pilih model apapun lewat 9router, tanpa lock-in ke satu provider.",
+  "version": "2.0.4",
+  "description": "Lightweight AI agent for your terminal — pick any model through 9router, no lock-in to one provider.",
   "type": "module",
   "bin": {
     "zcode": "./bin/zcode.js"
