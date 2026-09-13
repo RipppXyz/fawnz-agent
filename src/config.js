@@ -18,6 +18,9 @@ const DEFAULTS = {
     process.env.OPENROUTER_API_KEY ||
     "",
   model: process.env.FAWNZ_MODEL || process.env.ZCODE_MODEL || "",
+  // Optional: what to show in the UI instead of the raw model id (e.g. hide
+  // the underlying provider name). Falls back to a humanized `model` when empty.
+  displayModel: process.env.FAWNZ_MODEL_LABEL || "",
 };
 
 function ensureDir() {
@@ -29,6 +32,7 @@ function normalizeConfig(config = {}) {
     baseUrl: String(config.baseUrl || DEFAULTS.baseUrl).trim() || DEFAULTS.baseUrl,
     apiKey: String(config.apiKey ?? DEFAULTS.apiKey),
     model: String(config.model ?? DEFAULTS.model).trim(),
+    displayModel: String(config.displayModel ?? DEFAULTS.displayModel ?? "").trim(),
   };
 }
 

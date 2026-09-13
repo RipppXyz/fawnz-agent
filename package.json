@@ -1,6 +1,6 @@
 {
   "name": "fawnz",
-  "version": "2.0.9",
+  "version": "3.0.0",
   "description": "FawnZ Agent — a focused terminal AI assistant with a fullscreen TUI and OpenAI-compatible 9router support.",
   "type": "module",
   "bin": {

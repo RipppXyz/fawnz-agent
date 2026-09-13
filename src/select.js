@@ -100,7 +100,8 @@ export function selectFromList(items, { message = "Select:", current = null, foo
       const frameRows = rows - 1;
       let out = ANSI.syncBegin + ANSI.clear;
       for (let row = 0; row < frameRows; row += 1) {
-        out += `\x1b[${row + 1};1H${clipLine(lines[row] || "", cols)}${ANSI.eraseLine}`;
+        // Erase-to-end AFTER the text (not eraseLine, which would wipe out what we just wrote).
+        out += `\x1b[${row + 1};1H${clipLine(lines[row] || "", cols)}${ANSI.eraseToEnd}`;
       }
       out += `\x1b[${rows};1H${clipLine(chalk.gray("Esc cancel · Enter select · ↑↓ navigate"), cols)}`;
       out += ANSI.hideCursor + ANSI.syncEnd;

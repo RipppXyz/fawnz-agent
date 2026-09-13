@@ -62,9 +62,15 @@ export async function runSetup(current = {}) {
   }
 
   while (!model) model = await ask(rl, "Model name");
+
+  const displayModel = await ask(
+    rl,
+    "Display label for the model (leave blank to auto-format it)",
+    current.displayModel || ""
+  );
   rl.close();
 
-  const next = { baseUrl, apiKey, model };
+  const next = { baseUrl, apiKey, model, displayModel };
   saveConfig(next);
   console.log(successText("Configuration saved.\n"));
   return next;

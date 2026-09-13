@@ -5,7 +5,19 @@ import { streamChat, listModels, collapseModelVariants } from "./api.js";
 import { selectFromList } from "./select.js";
 import { promptInput } from "./promptInput.js";
 import { printHelp, userPrefix, VERSION, COMMANDS } from "./ui.js";
-import { renderFrame, enterFullscreen, leaveFullscreen, headerLine, terminalSize, wrapPlain, displayWidth } from "./tui.js";
+import {
+  renderFrame,
+  enterFullscreen,
+  leaveFullscreen,
+  headerLine,
+  terminalSize,
+  wrapPlain,
+  displayWidth,
+  bigTextLines,
+  bannerWidth,
+  centerLine,
+  humanizeModelName,
+} from "./tui.js";
 
 const SYSTEM_PROMPT =
   "You are FawnZ, an AI coding assistant running in the terminal. Be precise, practical, and concise by default. When code is requested, prefer complete usable code over vague advice.";
@@ -74,17 +86,32 @@ function renderConversation(config, messages, notices, {
   const bodyCapacity = Math.max(1, contentRows - fixedBottom - (menuCount ? menuCount + 1 : 0));
   const width = Math.max(12, cols - 4);
 
-  const body = [];
-  body.push(headerLine({ model: config.model, version: VERSION, busy }));
-  body.push(chalk.gray("─".repeat(cols)));
+  const headerRows = [headerLine({ model: config.model, version: VERSION, busy }), chalk.gray("─".repeat(cols))];
+  const body = [...headerRows];
 
   const transcript = messages.filter((message) => message.role !== "system");
   if (!transcript.length) {
-    body.push("");
-    body.push(chalk.bold.hex("#F2A24C")("Welcome to FawnZ"));
-    body.push(chalk.gray("Terminal AI assistant · 9router · model agnostic"));
-    body.push("");
-    body.push(chalk.gray("Type a message to start. Type / for commands."));
+    // Hermes-style splash: a big centered banner instead of a top-anchored
+    // one-liner with a wall of empty space beneath it.
+    const modelLabel = config.displayModel || (config.model ? humanizeModelName(config.model) : "");
+    const noticeCount = notices.length;
+    const available = Math.max(0, bodyCapacity - headerRows.length - noticeCount);
+
+    let splash;
+    if (cols >= 34) {
+      splash = bigTextLines("FawnZ").map((row) => centerLine(chalk.bold.hex("#F2A24C")(row), cols));
+      splash.push("");
+    } else {
+      splash = [centerLine(chalk.bold.hex("#F2A24C")("FawnZ"), cols), ""];
+    }
+    splash.push(centerLine(chalk.gray("Terminal AI assistant · 9router · model agnostic"), cols));
+    if (modelLabel) splash.push(centerLine(chalk.gray(`model: ${modelLabel}`), cols));
+    splash.push("");
+    splash.push(centerLine(chalk.gray("Type a message to start · / for commands"), cols));
+
+    const topPad = Math.max(0, Math.floor((available - splash.length) / 2));
+    body.push(...Array(topPad).fill(""));
+    body.push(...splash);
   } else {
     for (const message of transcript) {
       const isUser = message.role === "user";
@@ -120,7 +147,8 @@ function renderConversation(config, messages, notices, {
 
   // Put the prompt on the last content row and the status immediately above it.
   // drawFullscreen keeps one footer row reserved.
-  const footer = chalk.gray(`FawnZ ${VERSION} · ${config.model || "no model"} · ${busy ? "working" : "ready"}`);
+  const footerModel = config.displayModel || (config.model ? humanizeModelName(config.model) : "no model");
+  const footer = chalk.gray(`FawnZ ${VERSION} · ${footerModel} · ${busy ? "working" : "ready"}`);
   renderFrame(frame.slice(-contentRows), {
     footer,
     cursor: busy ? null : { row: contentRows, col: prompt.col },

@@ -9,6 +9,7 @@ export const ANSI = {
   saveCursor: "\x1b7",
   restoreCursor: "\x1b8",
   eraseLine: "\x1b[2K",
+  eraseToEnd: "\x1b[K", // erase from the cursor to end of line — safe to use AFTER writing text on that line
   eraseDown: "\x1b[J",
   reset: "\x1b[0m",
   syncBegin: "\x1b[?2026h",
@@ -149,7 +150,8 @@ export function renderFrame(lines, { footer = null, cursor = null, clear = false
 
   for (let row = 0; row < contentRows; row += 1) {
     const text = visible[row] ?? "";
-    frame += `\x1b[${row + 1};1H${clipLine(text, cols)}${ANSI.eraseLine}`;
+    // Erase-to-end AFTER the text (not eraseLine, which would wipe out what we just wrote).
+    frame += `\x1b[${row + 1};1H${clipLine(text, cols)}${ANSI.eraseToEnd}`;
   }
 
   if (footer) {
@@ -172,10 +174,59 @@ export function drawFullscreen(lines, options = {}) {
   renderFrame(lines, { ...options, clear: true });
 }
 
+// Compact 5x5 block font — only the glyphs FawnZ actually needs for its splash banner.
+const BANNER_FONT = {
+  F: ["█████", "█    ", "███  ", "█    ", "█    "],
+  A: [" ███ ", "█   █", "█████", "█   █", "█   █"],
+  W: ["█   █", "█   █", "█ █ █", "██ ██", "█   █"],
+  N: ["█   █", "██  █", "█ █ █", "█  ██", "█   █"],
+  Z: ["█████", "    █", "   █ ", "  █  ", "█████"],
+};
+const BANNER_GLYPH_HEIGHT = 5;
+const BANNER_BLANK_GLYPH = ["     ", "     ", "     ", "     ", "     "];
+
+// Renders `word` as big block-letter ASCII art (Hermes/figlet-style splash),
+// one row per array entry. Falls back to blank columns for unsupported chars.
+export function bigTextLines(word) {
+  const glyphs = String(word)
+    .toUpperCase()
+    .split("")
+    .map((ch) => BANNER_FONT[ch] || (ch === " " ? ["  ", "  ", "  ", "  ", "  "] : BANNER_BLANK_GLYPH));
+  const rows = [];
+  for (let row = 0; row < BANNER_GLYPH_HEIGHT; row += 1) {
+    rows.push(glyphs.map((glyph) => glyph[row]).join(" "));
+  }
+  return rows;
+}
+
+export function bannerWidth(word) {
+  const lines = bigTextLines(word);
+  return Math.max(0, ...lines.map((line) => displayWidth(line)));
+}
+
+export function centerLine(text, width) {
+  const w = displayWidth(text);
+  const pad = Math.max(0, Math.floor((width - w) / 2));
+  return " ".repeat(pad) + text;
+}
+
+// Turns a raw router/model id like "full_claude" into a friendlier label
+// like "Full Claude" for display. Set `displayModel` in config to override
+// this entirely (e.g. to hide the underlying provider name).
+export function humanizeModelName(rawModel) {
+  const value = String(rawModel || "").trim();
+  if (!value) return "";
+  return value
+    .split(/[_\-\s]+/)
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+}
+
 export function headerLine({ model, version, busy = false }) {
   const { cols } = terminalSize();
   const left = chalk.bold.hex("#F2A24C")("FawnZ") + chalk.gray(` v${version}`);
-  const middle = model ? chalk.white(model) : chalk.yellow("no model");
+  const middle = model ? chalk.white(humanizeModelName(model)) : chalk.yellow("no model");
   const right = busy ? chalk.hex("#F2A24C")("● working") : chalk.gray("● ready");
   const leftWidth = displayWidth(left);
   const middleWidth = displayWidth(middle);
