@@ -1,7 +1,7 @@
 {
   "name": "@ripppxyz/zcode",
-  "version": "2.0.5",
-  "description": "Lightweight AI agent for your terminal — pick any model through 9router, no lock-in to one provider.",
+  "version": "2.0.6",
+  "description": "A focused terminal AI assistant with a fullscreen TUI and OpenAI-compatible 9router support.",
   "type": "module",
   "bin": {
     "zcode": "./bin/zcode.js"
@@ -19,7 +19,8 @@
   ],
   "scripts": {
     "start": "node bin/zcode.js",
-    "prepublishOnly": "chmod +x bin/zcode.js"
+    "prepublishOnly": "chmod +x bin/zcode.js",
+    "test": "node --test"
   },
   "keywords": [
     "ai",

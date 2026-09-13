@@ -2,192 +2,222 @@
 
 # ZCode Agent
 
-**Agen AI yang jalan di terminal kamu — tanpa lock-in ke satu model apapun.**
+A terminal AI assistant built around an OpenAI-compatible 9router endpoint.
 
-[![npm version](https://img.shields.io/npm/v/@ripppxyz/zcode.svg)](https://www.npmjs.com/package/@ripppxyz/zcode)
+[![npm](https://img.shields.io/npm/v/@ripppxyz/zcode.svg)](https://www.npmjs.com/package/@ripppxyz/zcode)
 [![node](https://img.shields.io/node/v/@ripppxyz/zcode.svg)](https://nodejs.org)
 [![license](https://img.shields.io/npm/l/@ripppxyz/zcode.svg)](./LICENSE)
 
 </div>
 
-ZCode tidak punya model bawaan. Semua request diteruskan ke instance [9router](https://github.com/decocua/9router) milikmu, dan daftar model yang bisa dipakai selalu ditarik langsung dari router itu — bukan daftar hardcode di dalam kode ZCode. Ganti model kapan saja lewat `/model`, tanpa install ulang, tanpa restart, tanpa ubah satu baris kode pun.
+ZCode is a small terminal client for 9router. It keeps the model choice outside the app, streams responses, and uses a fullscreen terminal interface instead of printing a new screen for every command.
 
-```
-╭──────────────────────────────────────────────────────────────────────────╮
-│                          ZCode Agent  v2.0.2                             │
-│                agen AI di terminal kamu, ditenagai 9router               │
-├──────────────────────────────────────────────────────────────────────────┤
-│  model   claude-sonnet-4-6                                               │
-│  router  http://localhost:20128/v1                                      │
-│  dir     ~/project                                                       │
-╰──────────────────────────────────────────────────────────────────────────╯
-  ketik pesan lalu Enter · / untuk daftar perintah
-```
+## Requirements
 
-## Kenapa ZCode
+- Node.js 18 or newer
+- An OpenAI-compatible 9router instance
+- A terminal with TTY support for the fullscreen interface
 
-- **Model-agnostic beneran** — ZCode gak nebak, gak ngunci, dan gak nyimpen daftar model apapun di kodenya. Semua ditarik live dari `/v1/models` router kamu.
-- **Langsung masuk chat** — gak ada form Base URL/API key/model yang wajib diisi sebelum bisa ngobrol. Jalankan `zcode`, langsung kepakai. Belum ada model? Ketik pesan aja, menu pilihnya kebuka otomatis di tempat.
-- **Ganti model tanpa turun mesin** — `/model` buka menu pilih, `/model <nama>` langsung pindah. Gak ada restart, gak ada reinstall.
-- **Satu binary, semua platform** — Linux, macOS, dan Termux (Android) tanpa modifikasi kode.
-- **Command palette ala Claude Code** — ketik `/` dan daftar perintah muncul, tersaring otomatis sambil kamu ngetik. Navigasi panah ↑↓, pilih dengan Tab/Enter.
-- **Streaming asli** — balasan muncul token demi token, bukan nunggu selesai baru nongol.
-- **Ringan** — cuma satu dependency (`chalk`). Gak ada bloat.
+ZCode also runs without a TTY, but interactive features are limited in that mode.
 
-## Kenapa 9router jadi otak-nya
+## Install
 
-ZCode sendiri tidak menyimpan atau membatasi model apapun. Semua permintaan chat diteruskan ke instance 9router milikmu, yang mengurus provider mana yang dipakai, fallback saat rate limit, sampai model apa saja yang tersedia. ZCode fokus di sisi antarmuka terminal — urusan routing model diserahkan sepenuhnya ke 9router.
-
-Belum punya instance 9router? Lihat [repo 9router](https://github.com/decocua/9router) — bisa di-self-host dan mendukung endpoint API kompatibel format OpenAI (`/v1/models`, `/v1/chat/completions`).
-
-## Instalasi
-
-### Lewat npm (paling gampang)
+### npm
 
 ```bash
 npm install -g @ripppxyz/zcode@latest
+zcode
+```
+
+### From source
+
+```bash
+git clone https://github.com/RipppXyz/zcodex-agent.git
+cd zcodex-agent
+npm install
+npm link
+zcode
 ```
 
 ### Termux
 
 ```bash
-pkg update && pkg install nodejs git -y
-git clone https://github.com/RipppXyz/zcode-agent.git
-cd zcode-agent
-bash install.sh
-```
-
-### Linux / macOS (dari source)
-
-Butuh Node.js 18 ke atas.
-
-```bash
-git clone https://github.com/RipppXyz/zcode-agent.git
-cd zcode-agent
-npm install
-npm link
-zcode
-```
-
-## Pemakaian
-
-ZCode **tidak** menyuruh kamu isi form apapun sebelum bisa ngobrol. Jalankan `zcode`, dan kamu langsung masuk ke layar chat — sama saja baik ini run pertama kali atau yang ke-seratus.
-
-Model **tidak** ditebak atau dihardcode. Kalau belum ada model diset, banner bakal nunjukin `belum diset — ketik /model`, dan begitu kamu ketik pesan pertama, ZCode otomatis buka menu pilih model dari 9router di tempat — pesan kamu langsung lanjut terkirim setelah model dipilih. Gak ada layar terpisah, gak ada jeda.
-
-Base URL & API key router pakai default (`http://localhost:20128/v1`, tanpa API key) kalau kamu belum pernah atur. Mau ganti, pakai `/config` kapan saja di dalam chat, atau `zcode --config` dari terminal.
-
-Hasil konfigurasi (base url, api key, model) disimpan di `~/.zcode/config.json`.
-
-### Setup non-interaktif (automation / CI / Docker)
-
-Isi tiga environment variable ini **sebelum** menjalankan `zcode` pertama kali:
-
-```bash
-export ZCODE_BASE_URL="https://router.punyaku.com"
-export ZCODE_API_KEY="sk-xxxxxxxx"
-export ZCODE_MODEL="nama-model-yang-valid-di-router-kamu"
-zcode
-```
-
-Kalau `ZCODE_MODEL` tidak diisi, ZCode tetap membuka wizard interaktif — karena ZCode sengaja tidak punya nilai default untuk model.
-
-### Perintah di dalam chat
-
-Ketik `/` sendirian buat lihat menu semua perintah, tersaring otomatis sambil kamu ngetik lebih lanjut.
-
-| Perintah | Fungsi |
-|---|---|
-| `/help` | tampilkan daftar perintah |
-| `/model` | buka menu pilih model — navigasi panah ↑↓, atau ketik untuk menyaring |
-| `/model <nama>` | langsung ganti ke model tertentu tanpa buka menu |
-| `/models` | lihat daftar model dari router sebagai teks biasa |
-| `/clear` | kosongkan riwayat percakapan saat ini |
-| `/config` | ulangi setup (ganti api key / base url / model) |
-| `/exit` atau `/quit` | keluar |
-
-Kontrol lain saat mengetik:
-
-- **↑ / ↓** — navigasi menu perintah (kalau lagi ketik `/...`), atau riwayat input sebelumnya (kalau baris kosong)
-- **Tab / Enter** — pilih perintah yang di-highlight
-- **Esc** — tutup menu perintah tanpa memilih
-
-### Flag CLI
-
-```bash
-zcode --config     # buka wizard setup manual
-zcode --version    # cek versi
-zcode --help       # bantuan singkat
-```
-
-## Struktur proyek
-
-```
-zcode-agent/
-├── bin/
-│   └── zcode.js         # entry point
-├── src/
-│   ├── api.js            # komunikasi ke 9router (list model + streaming chat)
-│   ├── chat.js           # loop chat utama
-│   ├── config.js         # baca/tulis konfigurasi (tanpa model default)
-│   ├── promptInput.js    # input baris + command palette "/" ala Claude Code
-│   ├── select.js         # menu pilih model (panah + cari)
-│   ├── setup.js          # wizard setup (dipakai first-run & /config)
-│   ├── spinner.js        # animasi "berpikir"
-│   └── ui.js             # banner, daftar perintah, styling terminal
-├── install.sh
-├── update.sh
-└── package.json
-```
-
-## Update ke versi terbaru
-
-Kalau kamu install lewat npm:
-
-```bash
+pkg update
+pkg install nodejs git
 npm install -g @ripppxyz/zcode@latest
+zcode
 ```
 
-Kalau install dari git clone, **jangan** `git clone` ulang ke folder yang sama — bakal gagal dengan `destination path already exists` dan diam-diam tetap makai kode lama. Pakai `git pull`, atau jalankan `update.sh`:
+## First run
+
+ZCode defaults to `http://localhost:20128/v1` and will ask for a model when one is not configured.
+
+You can also configure it with environment variables:
 
 ```bash
-cd zcode-agent
-bash update.sh
+export ZCODE_BASE_URL="http://localhost:20128/v1"
+export ZCODE_API_KEY=""
+export ZCODE_MODEL="your-model-id"
+zcode
 ```
 
-`update.sh` otomatis: stash perubahan lokal (kalau ada) → `git pull` → `npm install` → `npm link` ulang → kembalikan stash tadi.
+Configuration is stored in:
 
-Clean install dari nol:
+```text
+~/.zcode/config.json
+```
+
+The file is created with private permissions. API keys are not printed by ZCode.
+
+## Commands
+
+Inside ZCode, type `/` to open the command palette.
+
+| Command | Action |
+| --- | --- |
+| `/help` | Show the command list |
+| `/model` | Open the model picker |
+| `/model <id>` | Switch models directly |
+| `/models` | Fetch the current model list from 9router |
+| `/clear` | Clear the current conversation |
+| `/config` | Change the 9router URL, key, or model |
+| `/exit` | Exit |
+| `/quit` | Exit |
+
+Input controls:
+
+- `↑` / `↓`: command navigation or input history
+- `Tab`: accept the highlighted command
+- `Enter`: run a command or send a message
+- `Esc`: close the command palette
+- `Home` / `End`: move the input cursor
+- `Ctrl+C` / `Ctrl+D`: exit
+- `Ctrl+L`: redraw the current screen
+
+## Fullscreen terminal UI
+
+The UI uses the terminal's alternate screen buffer and redraws one deterministic frame. This matters for long responses, command completion, terminal resizing, and terminals where old output would otherwise be left behind.
+
+The renderer also accounts for wide Unicode characters when calculating visible columns. Input is horizontally scrolled when it is wider than the terminal so the cursor stays visible.
+
+The model picker has its own bounded viewport and reacts to terminal resize events.
+
+## 9router
+
+ZCode sends requests to:
+
+```text
+POST /v1/chat/completions
+GET  /v1/models
+```
+
+The chat request uses the OpenAI-style `messages`, `model`, and `stream` fields. Streaming responses are read as SSE when the router returns `text/event-stream`; JSON responses are also accepted as a fallback.
+
+ZCode does not contain a hardcoded model catalog. The model list comes from the configured router.
+
+## Updating a Codespace
+
+Codespaces can keep an older checkout or an older globally installed npm package. Use one of these paths depending on how ZCode was installed.
+
+### Installed from npm
+
+Run this in the Codespaces terminal:
 
 ```bash
-rm -rf zcode-agent
-git clone https://github.com/RipppXyz/zcode-agent.git
-cd zcode-agent
+npm cache verify
+npm install -g @ripppxyz/zcode@latest --force
+hash -r
+which zcode
+zcode --version
+```
+
+The important part is `@latest`. Reinstalling `@ripppxyz/zcode` without it can leave you on an older cached/versioned install.
+
+### Running from the GitHub repository
+
+Use the remote repository as the source of truth instead of cloning the repo again:
+
+```bash
+cd ~/zcodex-agent
+git fetch --all --prune
+BRANCH="$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')"
+git checkout "$BRANCH"
+git reset --hard "origin/$BRANCH"
 npm install
 npm link
+hash -r
+zcode --version
 ```
 
-## Publish (buat maintainer)
+This intentionally discards local changes in the repository checkout. Use normal `git pull` instead when you need to keep local work.
+
+### One-line refresh
+
+```bash
+npm install -g @ripppxyz/zcode@latest --force && hash -r && zcode --version
+```
+
+## Publishing a release
+
+ZCode is a scoped public package. A publish requires an authenticated npm account that has publish access to `@ripppxyz/zcode`.
 
 ```bash
 npm login
-cd zcode-agent
-npm version patch   # atau minor/major — otomatis update package.json + git tag
 npm publish --access public
 ```
 
-`files` di `package.json` sudah membatasi apa saja yang ikut kepublish (`bin`, `src`, `install.sh`, `update.sh`, `README.md`, `LICENSE`) — jadi file kerja seperti arsip zip, catatan, atau folder percobaan gak akan pernah ikut ke tarball, apapun isi `.gitignore` kamu.
+For a release from a clean checkout:
 
-## Kontribusi
+```bash
+git pull --ff-only
+npm install
+npm test
+npm publish --access public
+```
 
-Pull request terbuka buat siapa saja. Beberapa ide yang masih terbuka:
+Do not run `npm version` after the package version has already been published. npm does not allow the same version to be published twice.
 
-- Multi-turn dengan riwayat percakapan yang bisa disimpan & dilanjutkan lewat file (`~/.zcode/history.json` sudah ada fungsi baca/tulisnya, tinggal disambungkan ke `chat.js`)
-- Mode "agent" yang bisa eksekusi perintah shell dengan konfirmasi
-- Tema warna yang bisa dikustomisasi lewat config
+## Development
 
-Kalau nemu bug atau ada ide fitur, buka issue saja.
+```bash
+npm install
+npm test
+npm start
+```
 
-## Lisensi
+The test suite covers model-list parsing, streamed SSE parsing, Unicode width handling, wrapping, and line clipping.
 
-MIT — bebas dipakai, dimodifikasi, dan disebarluaskan.
+## Project layout
+
+```text
+zcodex-agent/
+├── bin/
+│   └── zcode.js
+├── src/
+│   ├── api.js
+│   ├── chat.js
+│   ├── config.js
+│   ├── promptInput.js
+│   ├── select.js
+│   ├── setup.js
+│   ├── spinner.js
+│   ├── tui.js
+│   └── ui.js
+├── test/
+│   ├── api.test.js
+│   └── tui.test.js
+├── install.sh
+├── update.sh
+├── package.json
+└── README.md
+```
+
+## What ZCode is today
+
+ZCode v2.0.6 is a terminal AI assistant and router client. It is not a drop-in clone of Anthropic's Claude Code and does not currently reproduce Claude Code's private agent runtime, tool ecosystem, or product behavior.
+
+The project is intentionally kept small so the terminal layer can stay predictable while 9router handles model selection and provider routing.
+
+## License
+
+MIT

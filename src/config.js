@@ -6,17 +6,8 @@ const CONFIG_DIR = path.join(os.homedir(), ".zcode");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
 const HISTORY_FILE = path.join(CONFIG_DIR, "history.json");
 
-// Nilai default. baseUrl & apiKey boleh kosong/lokal karena aman untuk
-// dicoba langsung. Model SENGAJA tidak di-hardcode ke model tertentu —
-// ZCode tidak berasumsi model apapun, daftar model selalu ditarik
-// langsung dari instance 9router kamu (lihat src/api.js -> listModels).
-// Kalau ZCODE_MODEL tidak diset, user akan diminta memilih model dari
-// 9router saat pertama kali menjalankan zcode.
 const DEFAULTS = {
   baseUrl: process.env.ZCODE_BASE_URL || "http://localhost:20128/v1",
-  // Deteksi otomatis dari env var yang umum dipakai, biar first-run gak
-  // maksa user ngetik API key manual kalau sebenarnya sudah ada di env
-  // (mis. dari tool lain yang connect ke router yang sama).
   apiKey:
     process.env.ZCODE_API_KEY ||
     process.env.NINEROUTER_API_KEY ||
@@ -27,9 +18,15 @@ const DEFAULTS = {
 };
 
 function ensureDir() {
-  if (!fs.existsSync(CONFIG_DIR)) {
-    fs.mkdirSync(CONFIG_DIR, { recursive: true });
-  }
+  fs.mkdirSync(CONFIG_DIR, { recursive: true, mode: 0o700 });
+}
+
+function normalizeConfig(config = {}) {
+  return {
+    baseUrl: String(config.baseUrl || DEFAULTS.baseUrl).trim() || DEFAULTS.baseUrl,
+    apiKey: String(config.apiKey ?? DEFAULTS.apiKey),
+    model: String(config.model ?? DEFAULTS.model).trim(),
+  };
 }
 
 export function configExists() {
@@ -39,33 +36,27 @@ export function configExists() {
 export function loadConfig() {
   if (!configExists()) return null;
   try {
-    const raw = fs.readFileSync(CONFIG_FILE, "utf-8");
-    return JSON.parse(raw);
+    return normalizeConfig(JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8")));
   } catch {
     return null;
   }
 }
 
-/**
- * Ambil config yang sudah tersimpan. Kalau belum ada sama sekali:
- *  - kalau ZCODE_MODEL (env) sudah diisi, langsung buat config dari
- *    DEFAULTS tanpa nanya apa-apa (cocok buat automation/CI/Docker).
- *  - kalau tidak, return null supaya caller (chat.js) menjalankan
- *    wizard /config interaktif — termasuk menarik daftar model dari
- *    9router — daripada diam-diam mengunci ke satu model tertentu.
- */
 export function getOrCreateConfig() {
   const existing = loadConfig();
   if (existing) return existing;
   if (!DEFAULTS.model) return null;
-  const fresh = { ...DEFAULTS };
+  const fresh = normalizeConfig(DEFAULTS);
   saveConfig(fresh);
   return fresh;
 }
 
 export function saveConfig(config) {
   ensureDir();
-  fs.writeFileSync(CONFIG_FILE, JSON.stringify(config, null, 2), "utf-8");
+  const normalized = normalizeConfig(config);
+  const temp = `${CONFIG_FILE}.tmp`;
+  fs.writeFileSync(temp, JSON.stringify(normalized, null, 2), { encoding: "utf8", mode: 0o600 });
+  fs.renameSync(temp, CONFIG_FILE);
 }
 
 export function deleteConfig() {
@@ -75,16 +66,19 @@ export function deleteConfig() {
 export function saveLastSession(messages) {
   ensureDir();
   try {
-    fs.writeFileSync(HISTORY_FILE, JSON.stringify(messages, null, 2), "utf-8");
+    const temp = `${HISTORY_FILE}.tmp`;
+    fs.writeFileSync(temp, JSON.stringify(messages, null, 2), { encoding: "utf8", mode: 0o600 });
+    fs.renameSync(temp, HISTORY_FILE);
   } catch {
-    // gagal simpan history bukan hal fatal, diamkan saja
+    // Session history is optional; never crash the CLI because persistence failed.
   }
 }
 
 export function loadLastSession() {
   if (!fs.existsSync(HISTORY_FILE)) return [];
   try {
-    return JSON.parse(fs.readFileSync(HISTORY_FILE, "utf-8"));
+    const data = JSON.parse(fs.readFileSync(HISTORY_FILE, "utf8"));
+    return Array.isArray(data) ? data : [];
   } catch {
     return [];
   }

@@ -1,169 +1,162 @@
 import readline from "node:readline";
-import chalk from "chalk";
-import { COMMANDS, ACCENT } from "./ui.js";
+import { COMMANDS } from "./ui.js";
 
 const MAX_MENU_ITEMS = 8;
 
-/**
- * Input baris tunggal custom (raw mode) dengan:
- *  - riwayat pesan sebelumnya (panah ↑↓, kayak shell)
- *  - menu autocomplete perintah "/" yang muncul otomatis begitu baris
- *    diawali "/" dan belum ada spasi — mirip command palette Claude Code
- *
- * Enter / Tab saat menu terbuka & belum persis cocok -> lengkapi baris
- * dengan perintah yang di-highlight (tidak langsung submit).
- * Enter saat menu tertutup atau sudah persis cocok -> submit baris.
- */
-export function promptInput({ promptLabel, history = [] }) {
+function chars(value) {
+  return Array.from(value ?? "");
+}
+
+function insertAt(value, cursor, text) {
+  const list = chars(value);
+  const addition = chars(text);
+  list.splice(cursor, 0, ...addition);
+  return { value: list.join(""), cursor: cursor + addition.length };
+}
+
+function deleteBefore(value, cursor) {
+  const list = chars(value);
+  if (cursor <= 0) return { value, cursor };
+  list.splice(cursor - 1, 1);
+  return { value: list.join(""), cursor: cursor - 1 };
+}
+
+function deleteAt(value, cursor) {
+  const list = chars(value);
+  if (cursor >= list.length) return { value, cursor };
+  list.splice(cursor, 1);
+  return { value: list.join(""), cursor };
+}
+
+export function promptInput({
+  promptLabel,
+  history = [],
+  renderFrame = null,
+  statusText = "Enter to send · ↑↓ history · / commands · Ctrl+C quit",
+}) {
   return new Promise((resolve) => {
     let line = "";
     let cursor = 0;
     let histIndex = history.length;
     let draft = "";
-
     let menuOpen = false;
     let menuIndex = 0;
     let filtered = [];
-    let prevMenuLines = 0;
-
-    function stripAnsi(s) {
-      // eslint-disable-next-line no-control-regex
-      return s.replace(/\x1B\[[0-9;]*m/g, "");
-    }
+    let closed = false;
 
     const wasRaw = Boolean(process.stdin.isRaw);
     readline.emitKeypressEvents(process.stdin);
     if (process.stdin.isTTY) process.stdin.setRawMode(true);
-    // Sama seperti di select.js: paksa stdin balik ke flowing mode kalau
-    // sebelumnya sempat di-pause oleh readline.Interface yang ditutup
-    // (rl.close() di setup.js) — tanpa ini, prompt bisa diam-diam gak
-    // pernah nerima input dan proses keluar sendiri.
     process.stdin.resume();
 
     function computeMenu() {
-      if (line.startsWith("/") && !line.includes(" ")) {
-        const q = line.slice(1).toLowerCase();
-        filtered = COMMANDS.filter((c) => c.name.slice(1).toLowerCase().startsWith(q));
-        menuOpen = filtered.length > 0;
-        if (menuIndex >= filtered.length) menuIndex = 0;
-      } else {
-        menuOpen = false;
+      const commandPrefix = line.startsWith("/") && !line.includes(" ") && !line.includes("\t");
+      if (!commandPrefix) {
         filtered = [];
+        menuOpen = false;
         menuIndex = 0;
-      }
-    }
-
-    function formatRow(cmd, isSelected) {
-      const marker = isSelected ? chalk.hex(ACCENT)("❯ ") : "  ";
-      const name = isSelected ? chalk.bold.white(cmd.name) : chalk.cyan(cmd.name);
-      const padded = name + " ".repeat(Math.max(1, 20 - cmd.name.length));
-      return marker + padded + chalk.gray(cmd.desc);
-    }
-
-    function render() {
-      // PENTING: dulu fungsi ini pakai "\x1B[s" (simpan posisi cursor) lalu
-      // "\x1B[u" (restore) buat balik ke baris input setelah nge-print menu
-      // di bawahnya. Save/restore itu nyimpen posisi ABSOLUT di layar — begitu
-      // nge-print menu bikin layar scroll (gampang kejadian di terminal
-      // pendek kayak Termux dengan keyboard kebuka), posisi yang disimpan
-      // jadi nunjuk ke baris yang salah. Efeknya: baris "you › ..." lama
-      // gak pernah ketimpa, malah numpuk terus tiap keystroke (persis bug
-      // yang kelihatan di video). Fix-nya: jangan pernah pakai posisi
-      // absolut. Gerakin cursor cuma pakai jarak RELATIF (naik N baris dari
-      // posisi sekarang) — ini tetap benar walau layar lagi scroll, karena
-      // baris yang lagi dilihat ikut geser bareng cursor-nya. Pola ini sudah
-      // dipakai dengan benar di select.js; di sini kita samain.
-      const promptPlainLen = stripAnsi(promptLabel).length + 1; // +1 = spasi setelah label
-      process.stdout.write(`\r\x1B[K${promptLabel} ${line}`);
-
-      let menuLines = 0;
-      if (menuOpen) {
-        const visible = filtered.slice(0, MAX_MENU_ITEMS);
-        for (let i = 0; i < visible.length; i++) {
-          process.stdout.write("\n\r\x1B[K" + formatRow(visible[i], i === menuIndex));
-          menuLines++;
-        }
-        if (filtered.length > MAX_MENU_ITEMS) {
-          process.stdout.write(
-            "\n\r\x1B[K" + chalk.gray(`  … ${filtered.length - MAX_MENU_ITEMS} more, keep typing to filter`)
-          );
-          menuLines++;
-        }
+        return;
       }
 
-      // Baris menu yang lebih dikit dari render sebelumnya harus tetap
-      // dibersihkan (sisa render lama), tapi tetap dihitung sebagai baris
-      // yang "digambar" render ini supaya perhitungan naik-ke-atas di bawah
-      // tetap akurat.
-      const linesToClear = Math.max(0, prevMenuLines - menuLines);
-      for (let i = 0; i < linesToClear; i++) {
-        process.stdout.write("\n\r\x1B[K");
-      }
-      prevMenuLines = menuLines;
-
-      const rowsBelow = menuLines + linesToClear;
-      if (rowsBelow > 0) {
-        process.stdout.write(`\x1B[${rowsBelow}A`); // naik balik ke baris input, RELATIF
-      }
-      process.stdout.write("\r");
-      const col = promptPlainLen + cursor;
-      if (col > 0) process.stdout.write(`\x1B[${col}C`);
-    }
-
-    function finishLine(extraLinesBelow) {
-      // pindah ke bawah semua baris menu supaya output berikutnya tidak menimpa
-      if (extraLinesBelow > 0) {
-        process.stdout.write(`\x1B[${extraLinesBelow}B`);
-      }
-      process.stdout.write("\n");
+      const query = line.slice(1).toLowerCase();
+      filtered = COMMANDS.filter((command) => command.name.slice(1).toLowerCase().startsWith(query));
+      menuOpen = filtered.length > 0;
+      if (menuIndex >= filtered.length) menuIndex = Math.max(0, filtered.length - 1);
     }
 
     function cleanup() {
+      if (closed) return;
+      closed = true;
       process.stdin.removeListener("keypress", onKeypress);
+      process.removeListener("SIGWINCH", onResize);
       if (!wasRaw && process.stdin.isTTY) process.stdin.setRawMode(false);
+      process.stdout.write("\x1b[?25h");
     }
 
-    function acceptHighlighted() {
+    function render() {
+      if (closed) return;
+      renderFrame?.({
+        input: line,
+        cursor,
+        promptLabel,
+        menuOpen,
+        menuIndex,
+        filtered,
+        maxMenuItems: MAX_MENU_ITEMS,
+        statusText,
+      });
+    }
+
+    function chooseCommand() {
       const picked = filtered[menuIndex];
       if (!picked) return;
-      line = picked.name + " ";
-      cursor = line.length;
+      line = `${picked.name} `;
+      cursor = chars(line).length;
+      menuOpen = false;
+      filtered = [];
+      menuIndex = 0;
+      render();
+    }
+
+    function submit() {
+      const value = line;
+      cleanup();
+      resolve(value);
+    }
+
+    function historyUp() {
+      if (histIndex === history.length) draft = line;
+      if (histIndex > 0) histIndex -= 1;
+      line = history[histIndex] ?? "";
+      cursor = chars(line).length;
       computeMenu();
       render();
     }
 
+    function historyDown() {
+      if (histIndex < history.length) histIndex += 1;
+      line = histIndex === history.length ? draft : history[histIndex] ?? "";
+      cursor = chars(line).length;
+      computeMenu();
+      render();
+    }
+
+    function onResize() {
+      render();
+    }
+
     function onKeypress(str, key = {}) {
+      if (closed) return;
+
       if (key.ctrl && key.name === "c") {
         cleanup();
-        finishLine(prevMenuLines);
-        console.log(chalk.gray("Bye.\n"));
-        process.exit(0);
+        resolve(null);
+        return;
+      }
+
+      if (key.ctrl && key.name === "d") {
+        cleanup();
+        resolve(null);
+        return;
       }
 
       if (key.name === "return") {
         if (menuOpen && filtered[menuIndex] && line.trim() !== filtered[menuIndex].name) {
-          acceptHighlighted();
-          return;
+          chooseCommand();
+        } else {
+          submit();
         }
-        const linesBelow = prevMenuLines;
-        menuOpen = false;
-        filtered = [];
-        prevMenuLines = 0;
-        cleanup();
-        finishLine(linesBelow);
-        resolve(line);
         return;
       }
 
       if (key.name === "tab") {
-        if (menuOpen) acceptHighlighted();
+        if (menuOpen) chooseCommand();
         return;
       }
 
       if (key.name === "escape") {
         if (menuOpen) {
           menuOpen = false;
-          filtered = [];
           render();
         }
         return;
@@ -172,36 +165,31 @@ export function promptInput({ promptLabel, history = [] }) {
       if (key.name === "up") {
         if (menuOpen) {
           menuIndex = (menuIndex - 1 + filtered.length) % filtered.length;
-        } else if (histIndex > 0) {
-          if (histIndex === history.length) draft = line;
-          histIndex--;
-          line = history[histIndex] ?? "";
-          cursor = line.length;
+          render();
+        } else {
+          historyUp();
         }
-        render();
         return;
       }
 
       if (key.name === "down") {
         if (menuOpen) {
           menuIndex = (menuIndex + 1) % filtered.length;
-        } else if (histIndex < history.length) {
-          histIndex++;
-          line = histIndex === history.length ? draft : history[histIndex];
-          cursor = line.length;
+          render();
+        } else {
+          historyDown();
         }
-        render();
         return;
       }
 
       if (key.name === "left") {
-        if (cursor > 0) cursor--;
+        cursor = Math.max(0, cursor - 1);
         render();
         return;
       }
 
       if (key.name === "right") {
-        if (cursor < line.length) cursor++;
+        cursor = Math.min(chars(line).length, cursor + 1);
         render();
         return;
       }
@@ -213,37 +201,42 @@ export function promptInput({ promptLabel, history = [] }) {
       }
 
       if (key.name === "end") {
-        cursor = line.length;
+        cursor = chars(line).length;
         render();
         return;
       }
 
       if (key.name === "backspace") {
-        if (cursor > 0) {
-          line = line.slice(0, cursor - 1) + line.slice(cursor);
-          cursor--;
-        }
+        ({ value: line, cursor } = deleteBefore(line, cursor));
         computeMenu();
         render();
         return;
       }
 
       if (key.name === "delete") {
-        line = line.slice(0, cursor) + line.slice(cursor + 1);
+        ({ value: line, cursor } = deleteAt(line, cursor));
         computeMenu();
         render();
         return;
       }
 
-      if (str && !key.ctrl && !key.meta && str.length >= 1 && str >= " ") {
-        line = line.slice(0, cursor) + str + line.slice(cursor);
-        cursor += str.length;
+      // Ctrl+L: redraw without changing the input state.
+      if (key.ctrl && key.name === "l") {
+        render();
+        return;
+      }
+
+      if (str && !key.ctrl && !key.meta && str >= " ") {
+        ({ value: line, cursor } = insertAt(line, cursor, str));
         computeMenu();
         render();
       }
     }
 
     process.stdin.on("keypress", onKeypress);
+    process.on("SIGWINCH", onResize);
+    computeMenu();
     render();
+
   });
 }
