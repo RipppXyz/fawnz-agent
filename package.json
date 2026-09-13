@@ -1,6 +1,6 @@
 {
   "name": "fawnz",
-  "version": "2.0.8",
+  "version": "2.0.9",
   "description": "FawnZ Agent — a focused terminal AI assistant with a fullscreen TUI and OpenAI-compatible 9router support.",
   "type": "module",
   "bin": {
@@ -35,11 +35,11 @@
   ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/RipppXyz/zcodex-agent.git"
+    "url": "git+https://github.com/RipppXyz/fawnz-agent.git"
   },
-  "homepage": "https://github.com/RipppXyz/zcodex-agent",
+  "homepage": "https://github.com/RipppXyz/fawnz-agent",
   "bugs": {
-    "url": "https://github.com/RipppXyz/zcodex-agent/issues"
+    "url": "https://github.com/RipppXyz/fawnz-agent/issues"
   },
   "license": "MIT",
   "dependencies": {

@@ -32,8 +32,8 @@ fawnz
 ### From source
 
 ```bash
-git clone https://github.com/RipppXyz/zcodex-agent.git
-cd zcodex-agent
+git clone https://github.com/RipppXyz/fawnz-agent.git
+cd fawnz-agent
 npm install
 npm link
 fawnz
@@ -138,7 +138,7 @@ The important part is `@latest`. Reinstalling `fawnz` without it can leave you o
 Use the remote repository as the source of truth instead of cloning the repo again:
 
 ```bash
-cd ~/zcodex-agent
+cd ~/fawnz-agent
 git fetch --all --prune
 BRANCH="$(git remote show origin | sed -n '/HEAD branch/s/.*: //p')"
 git checkout "$BRANCH"
@@ -190,7 +190,7 @@ The test suite covers model-list parsing, streamed SSE parsing, Unicode width ha
 ## Project layout
 
 ```text
-zcodex-agent/
+fawnz-agent/
 ├── bin/
 │   └── fawnz.js
 ├── src/
@@ -214,7 +214,7 @@ zcodex-agent/
 
 ## What FawnZ is today
 
-FawnZ v2.0.8 is a terminal AI assistant and router client. It is not a drop-in clone of Anthropic's Claude Code and does not currently reproduce Claude Code's private agent runtime, tool ecosystem, or product behavior.
+FawnZ v2.0.9 is a terminal AI assistant and router client. It is not a drop-in clone of Anthropic's Claude Code and does not currently reproduce Claude Code's private agent runtime, tool ecosystem, or product behavior.
 
 The project is intentionally kept small so the terminal layer can stay predictable while 9router handles model selection and provider routing.
 
