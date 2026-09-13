@@ -14,6 +14,7 @@ function ask(rl, question, fallback = "") {
 
 function detectApiKey() {
   return (
+    process.env.FAWNZ_API_KEY ||
     process.env.ZCODE_API_KEY ||
     process.env.NINEROUTER_API_KEY ||
     process.env.ROUTER_API_KEY ||
@@ -25,7 +26,7 @@ function detectApiKey() {
 export async function runSetup(current = {}) {
   const rl = readline.createInterface({ input: process.stdin, output: process.stdout });
   console.log();
-  console.log(chalk.bold("ZCode configuration"));
+  console.log(chalk.bold("FawnZ configuration"));
   console.log(infoText("Press Enter to keep the current value.\n"));
 
   const baseUrl = await ask(rl, "9router base URL", current.baseUrl);

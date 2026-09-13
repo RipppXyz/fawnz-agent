@@ -70,7 +70,7 @@ export function selectFromList(items, { message = "Select:", current = null, foo
 
       const visible = filtered.slice(offset, offset + size);
       const lines = [
-        chalk.bold.hex("#F2A24C")("ZCode") + chalk.gray(" · model picker"),
+        chalk.bold.hex("#F2A24C")("FawnZ") + chalk.gray(" · model picker"),
         "",
         chalk.white(message) + " " + chalk.hex("#F2A24C")(query) + chalk.gray("▏"),
         "",

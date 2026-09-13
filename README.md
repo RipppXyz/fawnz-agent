@@ -1,16 +1,16 @@
 <div align="center">
 
-# ZCode Agent
+# FawnZ Agent
 
 A terminal AI assistant built around an OpenAI-compatible 9router endpoint.
 
-[![npm](https://img.shields.io/npm/v/@ripppxyz/zcode.svg)](https://www.npmjs.com/package/@ripppxyz/zcode)
-[![node](https://img.shields.io/node/v/@ripppxyz/zcode.svg)](https://nodejs.org)
-[![license](https://img.shields.io/npm/l/@ripppxyz/zcode.svg)](./LICENSE)
+[![npm](https://img.shields.io/npm/v/fawnz.svg)](https://www.npmjs.com/package/fawnz)
+[![node](https://img.shields.io/node/v/fawnz.svg)](https://nodejs.org)
+[![license](https://img.shields.io/npm/l/fawnz.svg)](./LICENSE)
 
 </div>
 
-ZCode is a small terminal client for 9router. It keeps the model choice outside the app, streams responses, and uses a fullscreen terminal interface instead of printing a new screen for every command.
+FawnZ is a small terminal client for 9router. It keeps the model choice outside the app, streams responses, and uses a fullscreen terminal interface instead of printing a new screen for every command.
 
 ## Requirements
 
@@ -18,15 +18,15 @@ ZCode is a small terminal client for 9router. It keeps the model choice outside 
 - An OpenAI-compatible 9router instance
 - A terminal with TTY support for the fullscreen interface
 
-ZCode also runs without a TTY, but interactive features are limited in that mode.
+FawnZ also runs without a TTY, but interactive features are limited in that mode.
 
 ## Install
 
 ### npm
 
 ```bash
-npm install -g @ripppxyz/zcode@latest
-zcode
+npm install -g fawnz@latest
+fawnz
 ```
 
 ### From source
@@ -36,7 +36,7 @@ git clone https://github.com/RipppXyz/zcodex-agent.git
 cd zcodex-agent
 npm install
 npm link
-zcode
+fawnz
 ```
 
 ### Termux
@@ -44,34 +44,34 @@ zcode
 ```bash
 pkg update
 pkg install nodejs git
-npm install -g @ripppxyz/zcode@latest
-zcode
+npm install -g fawnz@latest
+fawnz
 ```
 
 ## First run
 
-ZCode defaults to `http://localhost:20128/v1` and will ask for a model when one is not configured.
+FawnZ defaults to `http://localhost:20128/v1` and will ask for a model when one is not configured.
 
 You can also configure it with environment variables:
 
 ```bash
-export ZCODE_BASE_URL="http://localhost:20128/v1"
-export ZCODE_API_KEY=""
-export ZCODE_MODEL="your-model-id"
-zcode
+export FAWNZ_BASE_URL="http://localhost:20128/v1"
+export FAWNZ_API_KEY=""
+export FAWNZ_MODEL="your-model-id"
+fawnz
 ```
 
 Configuration is stored in:
 
 ```text
-~/.zcode/config.json
+~/.fawnz/config.json
 ```
 
-The file is created with private permissions. API keys are not printed by ZCode.
+The file is created with private permissions. API keys are not printed by FawnZ.
 
 ## Commands
 
-Inside ZCode, type `/` to open the command palette.
+Inside FawnZ, type `/` to open the command palette.
 
 | Command | Action |
 | --- | --- |
@@ -104,7 +104,7 @@ The model picker has its own bounded viewport and reacts to terminal resize even
 
 ## 9router
 
-ZCode sends requests to:
+FawnZ sends requests to:
 
 ```text
 POST /v1/chat/completions
@@ -113,11 +113,11 @@ GET  /v1/models
 
 The chat request uses the OpenAI-style `messages`, `model`, and `stream` fields. Streaming responses are read as SSE when the router returns `text/event-stream`; JSON responses are also accepted as a fallback.
 
-ZCode does not contain a hardcoded model catalog. The model list comes from the configured router.
+FawnZ does not contain a hardcoded model catalog. The model list comes from the configured router.
 
 ## Updating a Codespace
 
-Codespaces can keep an older checkout or an older globally installed npm package. Use one of these paths depending on how ZCode was installed.
+Codespaces can keep an older checkout or an older globally installed npm package. Use one of these paths depending on how FawnZ was installed.
 
 ### Installed from npm
 
@@ -125,13 +125,13 @@ Run this in the Codespaces terminal:
 
 ```bash
 npm cache verify
-npm install -g @ripppxyz/zcode@latest --force
+npm install -g fawnz@latest --force
 hash -r
-which zcode
-zcode --version
+which fawnz
+fawnz --version
 ```
 
-The important part is `@latest`. Reinstalling `@ripppxyz/zcode` without it can leave you on an older cached/versioned install.
+The important part is `@latest`. Reinstalling `fawnz` without it can leave you on an older cached/versioned install.
 
 ### Running from the GitHub repository
 
@@ -146,7 +146,7 @@ git reset --hard "origin/$BRANCH"
 npm install
 npm link
 hash -r
-zcode --version
+fawnz --version
 ```
 
 This intentionally discards local changes in the repository checkout. Use normal `git pull` instead when you need to keep local work.
@@ -154,12 +154,12 @@ This intentionally discards local changes in the repository checkout. Use normal
 ### One-line refresh
 
 ```bash
-npm install -g @ripppxyz/zcode@latest --force && hash -r && zcode --version
+npm install -g fawnz@latest --force && hash -r && fawnz --version
 ```
 
 ## Publishing a release
 
-ZCode is a scoped public package. A publish requires an authenticated npm account that has publish access to `@ripppxyz/zcode`.
+FawnZ is a public package. A publish requires an authenticated npm account that has publish access to `fawnz`.
 
 ```bash
 npm login
@@ -192,7 +192,7 @@ The test suite covers model-list parsing, streamed SSE parsing, Unicode width ha
 ```text
 zcodex-agent/
 ├── bin/
-│   └── zcode.js
+│   └── fawnz.js
 ├── src/
 │   ├── api.js
 │   ├── chat.js
@@ -212,9 +212,9 @@ zcodex-agent/
 └── README.md
 ```
 
-## What ZCode is today
+## What FawnZ is today
 
-ZCode v2.0.6 is a terminal AI assistant and router client. It is not a drop-in clone of Anthropic's Claude Code and does not currently reproduce Claude Code's private agent runtime, tool ecosystem, or product behavior.
+FawnZ v2.0.8 is a terminal AI assistant and router client. It is not a drop-in clone of Anthropic's Claude Code and does not currently reproduce Claude Code's private agent runtime, tool ecosystem, or product behavior.
 
 The project is intentionally kept small so the terminal layer can stay predictable while 9router handles model selection and provider routing.
 

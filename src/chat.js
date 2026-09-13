@@ -8,7 +8,7 @@ import { printHelp, userPrefix, VERSION, COMMANDS } from "./ui.js";
 import { renderFrame, enterFullscreen, leaveFullscreen, headerLine, terminalSize, wrapPlain, displayWidth } from "./tui.js";
 
 const SYSTEM_PROMPT =
-  "You are ZCode, an AI coding assistant running in the terminal. Be precise, practical, and concise by default. When code is requested, prefer complete usable code over vague advice.";
+  "You are FawnZ, an AI coding assistant running in the terminal. Be precise, practical, and concise by default. When code is requested, prefer complete usable code over vague advice.";
 const MAX_NOTICES = 60;
 const MAX_HISTORY = 100;
 
@@ -81,14 +81,14 @@ function renderConversation(config, messages, notices, {
   const transcript = messages.filter((message) => message.role !== "system");
   if (!transcript.length) {
     body.push("");
-    body.push(chalk.bold.hex("#F2A24C")("Welcome to ZCode"));
+    body.push(chalk.bold.hex("#F2A24C")("Welcome to FawnZ"));
     body.push(chalk.gray("Terminal AI assistant · 9router · model agnostic"));
     body.push("");
     body.push(chalk.gray("Type a message to start. Type / for commands."));
   } else {
     for (const message of transcript) {
       const isUser = message.role === "user";
-      const label = isUser ? chalk.blue.bold("you") : chalk.hex("#F2A24C").bold("● zcode");
+      const label = isUser ? chalk.blue.bold("you") : chalk.hex("#F2A24C").bold("● fawnz");
       body.push(label);
       for (const line of wrapPlain(message.content || "", width)) body.push(`  ${line}`);
       body.push("");
@@ -120,7 +120,7 @@ function renderConversation(config, messages, notices, {
 
   // Put the prompt on the last content row and the status immediately above it.
   // drawFullscreen keeps one footer row reserved.
-  const footer = chalk.gray(`ZCode ${VERSION} · ${config.model || "no model"} · ${busy ? "working" : "ready"}`);
+  const footer = chalk.gray(`FawnZ ${VERSION} · ${config.model || "no model"} · ${busy ? "working" : "ready"}`);
   renderFrame(frame.slice(-contentRows), {
     footer,
     cursor: busy ? null : { row: contentRows, col: prompt.col },
@@ -135,6 +135,11 @@ export async function main() {
   }
   if (args.includes("--help") || args.includes("-h")) {
     printHelp();
+    return;
+  }
+  if (args.includes("--config")) {
+    const existing = getOrCreateConfig() || { ...DEFAULTS, model: "" };
+    await runSetup(existing);
     return;
   }
 

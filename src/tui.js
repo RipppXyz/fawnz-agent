@@ -174,7 +174,7 @@ export function drawFullscreen(lines, options = {}) {
 
 export function headerLine({ model, version, busy = false }) {
   const { cols } = terminalSize();
-  const left = chalk.bold.hex("#F2A24C")("ZCode") + chalk.gray(` v${version}`);
+  const left = chalk.bold.hex("#F2A24C")("FawnZ") + chalk.gray(` v${version}`);
   const middle = model ? chalk.white(model) : chalk.yellow("no model");
   const right = busy ? chalk.hex("#F2A24C")("● working") : chalk.gray("● ready");
   const leftWidth = displayWidth(left);

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-printf '\n== ZCode Codespaces update ==\n\n'
+printf '\n== FawnZ Codespaces update ==\n\n'
 
 if ! command -v npm >/dev/null 2>&1; then
   echo "npm is not installed."
@@ -9,9 +9,9 @@ if ! command -v npm >/dev/null 2>&1; then
 fi
 
 npm cache verify >/dev/null 2>&1 || true
-npm install -g @ripppxyz/zcode@latest --force
+npm install -g fawnz@latest --force
 hash -r 2>/dev/null || true
 
 echo
-echo "Installed binary: $(command -v zcode || echo 'not found')"
-echo "Installed version: $(zcode --version)"
+echo "Installed binary: $(command -v fawnz || echo 'not found')"
+echo "Installed version: $(fawnz --version)"

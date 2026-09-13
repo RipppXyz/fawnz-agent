@@ -22,20 +22,20 @@ export const COMMANDS = [
   { name: "/models", desc: "list models reported by the router" },
   { name: "/clear", desc: "clear the current conversation" },
   { name: "/config", desc: "edit the router configuration" },
-  { name: "/exit", desc: "exit ZCode" },
+  { name: "/exit", desc: "exit FawnZ" },
   { name: "/quit", desc: "same as /exit" },
 ];
 
 export function printHelp() {
   console.log();
-  console.log(chalk.bold("ZCode Agent"));
+  console.log(chalk.bold("FawnZ Agent"));
   console.log(chalk.gray("AI assistant for the terminal, routed through an OpenAI-compatible 9router endpoint."));
   console.log();
   for (const command of COMMANDS) {
     console.log(`  ${chalk.cyan(command.name.padEnd(12))}${chalk.gray(command.desc)}`);
   }
   console.log();
-  console.log(chalk.gray("Usage: zcode | zcode --config | zcode --version"));
+  console.log(chalk.gray("Usage: fawnz | fawnz --config | fawnz --version"));
   console.log();
 }
 

@@ -2,19 +2,22 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
-const CONFIG_DIR = path.join(os.homedir(), ".zcode");
+const CONFIG_DIR = path.join(os.homedir(), ".fawnz");
+const LEGACY_CONFIG_DIR = path.join(os.homedir(), ".zcode");
 const CONFIG_FILE = path.join(CONFIG_DIR, "config.json");
+const LEGACY_CONFIG_FILE = path.join(LEGACY_CONFIG_DIR, "config.json");
 const HISTORY_FILE = path.join(CONFIG_DIR, "history.json");
 
 const DEFAULTS = {
-  baseUrl: process.env.ZCODE_BASE_URL || "http://localhost:20128/v1",
+  baseUrl: process.env.FAWNZ_BASE_URL || process.env.ZCODE_BASE_URL || "http://localhost:20128/v1",
   apiKey:
+    process.env.FAWNZ_API_KEY ||
     process.env.ZCODE_API_KEY ||
     process.env.NINEROUTER_API_KEY ||
     process.env.ROUTER_API_KEY ||
     process.env.OPENROUTER_API_KEY ||
     "",
-  model: process.env.ZCODE_MODEL || "",
+  model: process.env.FAWNZ_MODEL || process.env.ZCODE_MODEL || "",
 };
 
 function ensureDir() {
@@ -30,16 +33,31 @@ function normalizeConfig(config = {}) {
 }
 
 export function configExists() {
-  return fs.existsSync(CONFIG_FILE);
+  return fs.existsSync(CONFIG_FILE) || fs.existsSync(LEGACY_CONFIG_FILE);
 }
 
 export function loadConfig() {
-  if (!configExists()) return null;
-  try {
-    return normalizeConfig(JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8")));
-  } catch {
-    return null;
+  // Baca dari lokasi baru dulu (~/.fawnz). Kalau belum ada tapi config
+  // lama dari sebelum rename (~/.zcode, jaman masih bernama "zcode")
+  // masih ada, pakai itu supaya user yang upgrade gak kehilangan
+  // baseUrl/apiKey/model yang udah pernah mereka set.
+  if (fs.existsSync(CONFIG_FILE)) {
+    try {
+      return normalizeConfig(JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8")));
+    } catch {
+      return null;
+    }
   }
+  if (fs.existsSync(LEGACY_CONFIG_FILE)) {
+    try {
+      const migrated = normalizeConfig(JSON.parse(fs.readFileSync(LEGACY_CONFIG_FILE, "utf8")));
+      saveConfig(migrated); // pindahin sekali ke ~/.fawnz biar run berikutnya gak perlu baca lokasi lama lagi
+      return migrated;
+    } catch {
+      return null;
+    }
+  }
+  return null;
 }
 
 export function getOrCreateConfig() {

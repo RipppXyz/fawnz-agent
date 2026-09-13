@@ -1,10 +1,10 @@
 {
-  "name": "@ripppxyz/zcode",
-  "version": "2.0.6",
-  "description": "A focused terminal AI assistant with a fullscreen TUI and OpenAI-compatible 9router support.",
+  "name": "fawnz",
+  "version": "2.0.8",
+  "description": "FawnZ Agent — a focused terminal AI assistant with a fullscreen TUI and OpenAI-compatible 9router support.",
   "type": "module",
   "bin": {
-    "zcode": "./bin/zcode.js"
+    "fawnz": "bin/fawnz.js"
   },
   "engines": {
     "node": ">=18"
@@ -18,8 +18,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "start": "node bin/zcode.js",
-    "prepublishOnly": "chmod +x bin/zcode.js",
+    "start": "node bin/fawnz.js",
+    "prepublishOnly": "chmod +x bin/fawnz.js",
     "test": "node --test"
   },
   "keywords": [
@@ -29,7 +29,8 @@
     "termux",
     "9router",
     "terminal",
-    "zcode",
+    "fawnz",
+    "fawnz-agent",
     "model-agnostic"
   ],
   "repository": {
