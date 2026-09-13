@@ -1,0 +1,48 @@
+{
+  "name": "fawnz",
+  "version": "3.0.0",
+  "description": "FawnZ Agent — a focused terminal AI assistant with a fullscreen TUI and OpenAI-compatible 9router support.",
+  "type": "module",
+  "bin": {
+    "fawnz": "bin/fawnz.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "bin",
+    "src",
+    "install.sh",
+    "update.sh",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "start": "node bin/fawnz.js",
+    "prepublishOnly": "chmod +x bin/fawnz.js",
+    "test": "node --test"
+  },
+  "keywords": [
+    "ai",
+    "agent",
+    "cli",
+    "termux",
+    "9router",
+    "terminal",
+    "fawnz",
+    "fawnz-agent",
+    "model-agnostic"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RipppXyz/fawnz-agent.git"
+  },
+  "homepage": "https://github.com/RipppXyz/fawnz-agent",
+  "bugs": {
+    "url": "https://github.com/RipppXyz/fawnz-agent/issues"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.3.0"
+  }
+}
